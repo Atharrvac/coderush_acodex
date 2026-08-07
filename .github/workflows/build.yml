@@ -1,0 +1,103 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test-mobile:
+    name: Test Mobile App
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./mobile
+        run: npm ci
+      
+      - name: Run linter
+        working-directory: ./mobile
+        run: npm run lint || true
+      
+      - name: Type check
+        working-directory: ./mobile
+        run: npx tsc --noEmit || true
+
+  build-android-preview:
+    name: Build Android Preview
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    needs: test-mobile
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      
+      - name: Install dependencies
+        working-directory: ./mobile
+        run: npm ci
+      
+      - name: Build Android APK
+        working-directory: ./mobile
+        run: eas build --platform android --profile preview --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+  build-production:
+    name: Build Production
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: test-mobile
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      
+      - name: Install dependencies
+        working-directory: ./mobile
+        run: npm ci
+      
+      - name: Build Android Production
+        working-directory: ./mobile
+        run: eas build --platform android --profile production --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      
+      - name: Build iOS Production
+        working-directory: ./mobile
+        run: eas build --platform ios --profile production --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}

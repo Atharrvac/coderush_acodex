@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Civic Redressal Planner - Gov Dashboard</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        gov: { saffron: '#FF9933', green: '#138808', navy: '#000080', light: '#f4f5f7', border: '#e5e7eb' },
+                        brand: { 50: '#eff6ff', 100: '#dbeafe', 500: '#000080', 600: '#000066', 900: '#000033' },
+                        surface: { 50: '#f8fafc', 100: '#f1f5f9', 800: '#334155', 900: '#1e293b' }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Supabase SDK -->
+    <script src="./supabase.js"></script>
+    <!-- Leaflet for Maps (Satellite) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #f1f5f9; color: #0f172a; overflow-x: hidden; }
+        .hidden { display: none !important; }
+        
+        /* Glassmorphism utilities replaced with solid standard gov styling */
+        .glass { background: #ffffff; border: 1px solid #e5e7eb; border-bottom: 2px solid #e5e7eb; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+        .glass-dark { background: rgba(0, 0, 0, 0.6); }
+        
+        /* Status Badges */
+        .status-badge { padding: 4px 8px; font-size: 0.7rem; font-weight: 700; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid; }
+        .status-posted { background-color: #fffbeb; color: #b45309; border-color: #fcd34d; }
+        .status-being_helped { background-color: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+        .status-in_progress { background-color: #faf5ff; color: #7e22ce; border-color: #e9d5ff; }
+        .status-solved { background-color: #f0fdf4; color: #047857; border-color: #a7f3d0; }
+        
+        /* Priorities */
+        .priority-high { border-left: 4px solid #ef4444; }
+        .priority-med { border-left: 4px solid #f59e0b; }
+        .priority-low { border-left: 4px solid #3b82f6; }
+        
+        #map { height: 600px; width: 100%; z-index: 1; border-radius: 1rem; }
+        
+        /* Animations */
+        .hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .hover-lift:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        
+        /* Table Styles */
+        table { border-collapse: separate; border-spacing: 0; width: 100%; }
+        th { background: #f8fafc; padding: 1rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; font-weight: 700; border-bottom: 1px solid #e2e8f0; }
+        td { padding: 1rem; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+        tr:last-child td { border-bottom: none; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-gov-light text-slate-800 antialiased flex flex-col h-screen overflow-hidden">
+    <!-- Official Gov Top Banner -->
+    <div class="h-1.5 w-full bg-gradient-to-r from-gov-saffron via-white to-gov-green z-50 shrink-0"></div>
+    <div class="bg-white px-8 py-3 flex items-center justify-between border-b border-gov-border shrink-0 z-40 shadow-sm relative">
+        <div class="flex items-center space-x-3">
+            <span class="text-3xl filter grayscale contrast-200 opacity-90">🦁</span> <!-- Emblem Placeholder -->
+            <div class="border-l-2 border-slate-300 pl-3">
+                <h1 class="text-xl font-bold text-gov-navy tracking-tight leading-tight uppercase">Government of India</h1>
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-widest">National Civic Redressal Portal</p>
+            </div>
+        </div>
+        <div class="text-right flex items-center space-x-6">
+            <div class="hidden md:block">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Powered by</p>
+                <p class="text-sm font-extrabold text-gov-navy">National Informatics Centre (NIC)</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="hidden fixed inset-0 glass-dark flex items-center justify-center z-50 transition-opacity">
+        <div class="bg-white rounded p-10 max-w-md w-full mx-4 shadow-xl border-t-4 border-gov-navy relative overflow-hidden">
+            <div class="text-center mb-8">
+                <span class="text-5xl block mb-4 grayscale opacity-80">🦁</span>
+                <h2 class="text-2xl font-bold text-gov-navy uppercase tracking-wide">Officer Portal Login</h2>
+                <p class="text-slate-500 text-sm mt-1 font-medium">NIC Civic Redressal System</p>
+            </div>
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5">Government Email / NIC-ID</label>
+                    <input type="email" id="loginEmail" required 
+                           class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded focus:ring-2 focus:ring-gov-navy/20 focus:border-gov-navy transition-all outline-none font-medium text-slate-900"
+                           placeholder="officer.demo@gov.in" value="officer.demo@gov.in">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5">Password</label>
+                    <input type="password" id="loginPassword" required 
+                           class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded focus:ring-2 focus:ring-gov-navy/20 focus:border-gov-navy transition-all outline-none font-medium text-slate-900"
+                           placeholder="••••••••" value="password123">
+                </div>
+                <button type="submit" id="loginBtnText"
+                        class="w-full bg-gov-navy text-white font-bold py-3 px-4 rounded hover:bg-blue-900 active:bg-blue-950 transition-all shadow mt-2">
+                    Secure Login
+                </button>
+                <div id="loginError" class="hidden mt-4 p-2 bg-red-50 text-red-700 text-xs font-bold rounded text-center border border-red-200"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Live Command Ticker -->
+    <div class="bg-slate-900 text-white text-[11px] font-mono px-8 py-1.5 flex items-center overflow-hidden border-b border-slate-800 shadow-inner z-20 relative shrink-0">
+        <span class="text-gov-saffron font-bold mr-4 flex-shrink-0 flex items-center uppercase">
+            <span class="flex h-2 w-2 relative mr-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-gov-saffron opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-gov-saffron"></span>
+            </span>
+            NIC SYSTEM FEED
+        </span>
+        <div class="flex-1 whitespace-nowrap overflow-hidden relative h-4">
+            <div id="commandTicker" class="absolute left-0 top-0 transition-transform duration-500 ease-in-out text-slate-300">
+                [SYSTEM] Initializing Operations Triage Engine...
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="flex-1 flex overflow-hidden">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-slate-50 border-r border-slate-200 flex-shrink-0 flex flex-col z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)] relative">
+            <div class="p-6 pb-2">
+                <div class="flex items-center space-x-3 mb-6 bg-white p-3 rounded-md border border-slate-200 shadow-sm">
+                    <div class="w-10 h-10 rounded bg-gov-navy flex items-center justify-center text-white font-bold text-lg">O</div>
+                    <div class="overflow-hidden">
+                        <p class="text-sm font-bold text-slate-900 truncate" id="officerNameDisplay">Loading...</p>
+                        <p class="text-xs text-slate-500 font-medium">Nodal Officer</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="px-4">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 px-2">System Modules</p>
+                <nav class="space-y-1">
+                    <button onclick="switchTab('analytics')" id="nav-analytics" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-md text-slate-600 hover:bg-slate-200 hover:text-gov-navy transition-all group font-bold text-sm">
+                        <svg class="w-4 h-4 text-slate-400 group-hover:text-gov-navy transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        <span>Analytics Dashboard</span>
+                    </button>
+                    <button onclick="switchTab('queue')" id="nav-queue" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-md bg-blue-50 text-gov-navy font-bold text-sm border border-blue-100 transition-all group">
+                        <div class="flex items-center space-x-3">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                            <span>Triage Queue</span>
+                        </div>
+                        <span id="queueBadge" class="bg-gov-navy text-white text-[10px] px-2 py-0.5 rounded font-extrabold shadow-sm">0</span>
+                    </button>
+                    <button onclick="switchTab('map')" id="nav-map" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-md text-slate-600 hover:bg-slate-200 hover:text-gov-navy transition-all group font-bold text-sm">
+                        <svg class="w-4 h-4 text-slate-400 group-hover:text-gov-navy transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+                        <span>Geospatial Map</span>
+                    </button>
+                </nav>
+            </div>
+            
+            <div class="mt-auto p-4 border-t border-slate-200">
+                <button onclick="logout()" class="w-full flex items-center justify-center space-x-2 px-3 py-2.5 rounded-md bg-white text-slate-600 hover:text-red-700 hover:bg-red-50 border border-slate-300 transition-all font-bold text-sm shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    <span>Secure Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col relative bg-gov-light overflow-hidden">
+            <!-- Header Section -->
+            <header class="h-16 bg-white flex items-center justify-between px-8 border-b border-slate-200 shrink-0 shadow-sm z-10">
+                <h2 id="pageTitle" class="text-lg font-bold text-gov-navy uppercase tracking-wide">Triage Queue</h2>
+                <div class="flex items-center space-x-4">
+                    <button onclick="loadData()" class="flex items-center space-x-2 bg-white border border-slate-300 shadow-sm px-3 py-1.5 rounded text-xs font-bold text-slate-700 hover:text-gov-navy hover:bg-blue-50 transition-all">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        <span>Force DB Sync</span>
+                    </button>
+                </div>
+            </header>
+
+        <!-- Loading Overlay -->
+        <div id="loadingIndicator" class="hidden absolute inset-0 bg-white/60 backdrop-blur-sm z-40 flex flex-col items-center justify-center">
+            <div class="w-12 h-12 border-4 border-slate-200 border-t-brand-600 rounded-full animate-spin mb-4 shadow-lg"></div>
+            <p class="text-slate-800 font-bold tracking-wide">Syncing civic records...</p>
+        </div>
+
+        <!-- Scrollable Content Area -->
+        <div class="flex-1 overflow-y-auto p-8 relative">
+            
+            <!-- VIEW: ANALYTICS -->
+            <div id="view-analytics" class="hidden space-y-8 animate-fade-in">
+                <!-- Stats Row -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="bg-white rounded p-6 shadow-sm border border-slate-200">
+                        <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Total Reports</p>
+                        <p id="statTotal" class="text-3xl font-extrabold text-gov-navy">0</p>
+                    </div>
+                    <div class="bg-white rounded p-6 shadow-sm border border-slate-200">
+                        <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Pending Review</p>
+                        <p id="statPending" class="text-3xl font-extrabold text-gov-navy">0</p>
+                    </div>
+                    <div class="bg-white rounded p-6 shadow-sm border border-slate-200">
+                        <div class="flex items-center mb-1">
+                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">SLA Breached</p>
+                            <span class="flex h-2.5 w-2.5 ml-2">
+                                <span class="animate-ping absolute inline-flex h-2.5 w-2.5 rounded-full bg-red-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                            </span>
+                        </div>
+                        <p id="statBreached" class="text-3xl font-extrabold text-red-700">0</p>
+                    </div>
+                    <div class="bg-white rounded p-6 shadow-sm border border-slate-200">
+                        <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Resolved</p>
+                        <p id="statResolved" class="text-3xl font-extrabold text-gov-navy">0</p>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded shadow-sm border border-slate-200 flex flex-col">
+                        <h3 class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-4">Issue Distribution</h3>
+                        <div class="flex-1 min-h-[220px] relative flex justify-center items-center">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded shadow-sm border border-slate-200 flex flex-col">
+                        <h3 class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-4">Language Demographics</h3>
+                        <div class="flex-1 min-h-[220px] relative flex justify-center items-center">
+                            <canvas id="languageChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded shadow-sm border border-slate-200 flex flex-col">
+                        <h3 class="text-[11px] font-bold text-gov-navy uppercase tracking-widest mb-4 flex items-center">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                            Dept Resource Strain
+                        </h3>
+                        <div class="flex-1 min-h-[220px] relative flex justify-center items-center">
+                            <canvas id="strainChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: QUEUE -->
+            <div id="view-queue" class="space-y-6">
+                <!-- Filters -->
+                <div class="flex space-x-4 mb-2">
+                    <button class="bg-gov-navy text-white px-4 py-2 rounded shadow text-xs font-bold uppercase tracking-wide">All Tickets</button>
+                    <button class="bg-white text-slate-600 hover:bg-slate-50 border border-slate-300 px-4 py-2 rounded text-xs font-bold uppercase tracking-wide transition-colors">Needs Action</button>
+                    <button class="bg-white text-slate-600 hover:bg-slate-50 border border-slate-300 px-4 py-2 rounded text-xs font-bold uppercase tracking-wide transition-colors">SLA Risk</button>
+                </div>
+
+                <div class="bg-white rounded shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr>
+                                    <th class="w-16 text-center">Pri</th>
+                                    <th>Resident Report</th>
+                                    <th>Routing & Insights</th>
+                                    <th>SLA Tracking</th>
+                                    <th>State</th>
+                                    <th class="text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="queueBody" class="divide-y divide-slate-100">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: MAP -->
+            <div id="view-map" class="hidden h-full flex flex-col">
+                <div class="bg-white p-4 rounded shadow-sm border border-slate-200 flex-1 flex flex-col relative overflow-hidden">
+                    <div class="absolute top-8 left-8 z-10 bg-white border border-slate-300 shadow px-4 py-3 rounded max-w-sm">
+                        <h3 class="font-bold text-gov-navy text-sm mb-1 uppercase tracking-wider">Spatial Deduplication</h3>
+                        <p class="text-xs text-slate-600 font-medium">Cluster analysis helps identify duplicate reports from the same 100m radius.</p>
+                    </div>
+                    <div id="map" class="flex-1 rounded"></div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Resolution Modal -->
+    <div id="resolutionModal" class="hidden fixed inset-0 glass-dark flex items-center justify-center z-50 transition-opacity">
+        <div class="bg-white rounded p-8 max-w-lg w-full mx-4 shadow-2xl border-t-4 border-gov-navy">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-extrabold text-slate-900">Resolve Issue</h3>
+                <button onclick="closeModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6">
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Ticket Reference</p>
+                <p id="modalTicketTitle" class="font-bold text-slate-900 truncate">Loading...</p>
+            </div>
+
+            <form id="resolutionForm" class="space-y-6">
+                <input type="hidden" id="modalTicketId">
+                <input type="hidden" id="modalTicketCategory">
+                
+                <!-- Recommended SOP -->
+                <div class="mb-4 border border-slate-300 bg-white rounded overflow-hidden shadow-sm">
+                    <div class="bg-slate-100 border-b border-slate-300 px-4 py-2.5 flex items-center justify-between">
+                        <span class="text-gov-navy font-bold text-xs uppercase tracking-wider flex items-center">
+                            <svg class="w-4 h-4 mr-1.5 text-gov-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                            Standard Operating Procedure
+                        </span>
+                        <span class="bg-blue-50 text-blue-800 border border-blue-200 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-widest">Auto-Suggested</span>
+                    </div>
+                    <div class="p-4 bg-slate-50">
+                        <p id="aiActionText" class="text-sm font-medium text-slate-700 leading-relaxed mb-3">Loading department guidelines...</p>
+                        <button type="button" onclick="applyAIPlan()" class="text-xs font-bold text-gov-navy bg-white border border-slate-300 px-3 py-1.5 rounded hover:bg-slate-100 transition-colors shadow-sm flex items-center uppercase tracking-wide">
+                            <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                            Insert SOP Template
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">Resolution Notes (Accountability Log)</label>
+                    <textarea id="resolutionNotes" required rows="4"
+                              class="w-full px-4 py-3 bg-white border border-slate-300 rounded focus:ring-2 focus:ring-gov-navy/20 focus:border-gov-navy transition-all outline-none font-medium text-slate-900 resize-none"
+                              placeholder="Detail the actions taken to resolve this issue..."></textarea>
+                    <p class="text-[10px] uppercase tracking-widest text-slate-500 mt-2 font-bold">These notes will be translated and shared with the resident automatically.</p>
+                </div>
+                
+                <div class="flex space-x-3 pt-2">
+                    <button type="button" onclick="closeModal()" class="flex-1 py-3 px-4 rounded font-bold text-slate-600 bg-slate-100 border border-slate-300 hover:bg-slate-200 transition-colors text-sm uppercase tracking-wider">
+                        Cancel
+                    </button>
+                    <button type="submit" class="flex-1 py-3 px-4 rounded font-bold text-white bg-gov-green hover:bg-green-700 active:bg-green-800 shadow transition-all text-sm uppercase tracking-wider">
+                        Mark as Solved
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Script Application Logic -->
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://cqkdvdawrfipbecvvrlq.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_wZmyBpqQ7yDRQFRewKWirA_IVBpenVu';
+        
+        let supabaseClient = null;
+        if (window.supabase) {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        }
+
+        // State
+        let currentUser = null;
+        let problems = [];
+        let map = null;
+        let markers = [];
+        let charts = {};
+
+        const PROBLEM_CATEGORIES = {
+            'infrastructure': { name: 'Infrastructure', emoji: '🏗️', dept: 'Public Works' },
+            'sanitation': { name: 'Sanitation', emoji: '🧹', dept: 'Waste Management' },
+            'utilities': { name: 'Utilities', emoji: '💧', dept: 'Water & Power' },
+            'safety': { name: 'Safety Hazard', emoji: '🛡️', dept: 'Public Safety' },
+            'access': { name: 'Access Barrier', emoji: '♿', dept: 'Disability Affairs' },
+            'environment': { name: 'Environment', emoji: '🌳', dept: 'Environmental Board' },
+            'public_health': { name: 'Public Health', emoji: '🏥', dept: 'Health Dept' },
+            'other': { name: 'Other', emoji: '📌', dept: 'General Redressal' },
+        };
+
+        const LANG_MAP = { 'en': 'English', 'hi': 'Hindi (हिन्दी)', 'mr': 'Marathi (मराठी)' };
+
+        // Auto bypass login for demo purposes
+        currentUser = { email: 'officer.demo@gov.in' };
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById('loginModal').classList.add('hidden');
+            document.getElementById('officerNameDisplay').textContent = currentUser.email;
+            loadData();
+            initCharts();
+            startTicker();
+
+            // Realtime Subscription for Live Updates
+            if (supabaseClient) {
+                supabaseClient
+                    .channel('public:problems')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'problems' }, payload => {
+                        console.log('Realtime update received!', payload);
+                        loadData();
+                    })
+                    .subscribe();
+            }
+        });
+
+        function startTicker() {
+            const ticker = document.getElementById('commandTicker');
+            setInterval(() => {
+                const pendingCount = problems.filter(p => p.status !== 'solved').length;
+                const breachedCount = problems.filter(p => isSLABreached(p) && p.status !== 'solved').length;
+                
+                const msgs = [
+                    "[AI TRIAGE] Auto-deduplication engine actively monitoring queue.",
+                    `[MONITOR] ${pendingCount} total active reports require attention.`,
+                    breachedCount > 0 ? `[CRITICAL] ${breachedCount} SLA Breaches detected - Auto-escalation active.` : "[MONITOR] All service levels within acceptable limits.",
+                    "[SYSTEM] Syncing real-time civic records via secure endpoint.",
+                    "[AI DISPATCH] Predictive model active. Generating heuristic action plans."
+                ];
+                
+                const nextMsg = msgs[Math.floor(Math.random() * msgs.length)];
+                
+                ticker.style.transform = 'translateY(-100%)';
+                ticker.style.opacity = '0';
+                
+                setTimeout(() => {
+                    ticker.textContent = nextMsg;
+                    ticker.style.transition = 'none';
+                    ticker.style.transform = 'translateY(100%)';
+                    
+                    setTimeout(() => {
+                        ticker.style.transition = 'transform 0.5s ease-out, opacity 0.5s ease-out';
+                        ticker.style.transform = 'translateY(0)';
+                        ticker.style.opacity = '1';
+                    }, 50);
+                }, 500);
+            }, 5000);
+        }
+
+        async function loadData() {
+            document.getElementById('loadingIndicator').classList.remove('hidden');
+            
+            try {
+                // Fetch ALL problems 
+                const { data, error } = await supabaseClient
+                    .from('problems')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                // For the Gov Dashboard, we only process specific problems.
+                // We'll process all of them for the demo to show triage logic.
+                problems = runTriageEngine(data || []);
+
+                updateAnalytics();
+                renderQueue();
+                updateMap();
+            } catch (err) {
+                console.error('Error fetching data', err);
+            } finally {
+                document.getElementById('loadingIndicator').classList.add('hidden');
+            }
+        }
+
+        // Deduplication & Priority Logic (The "Planner" Engine)
+        function runTriageEngine(data) {
+            const processed = [...data];
+            
+            // Haversine distance helper
+            function getDistance(lat1, lon1, lat2, lon2) {
+                const R = 6371e3; // metres
+                const φ1 = lat1 * Math.PI/180;
+                const φ2 = lat2 * Math.PI/180;
+                const Δφ = (lat2-lat1) * Math.PI/180;
+                const Δλ = (lon2-lon1) * Math.PI/180;
+                const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                return R * c;
+            }
+
+            // O(n^2) clustering for demo - flag if within 100m of same category
+            for(let i=0; i<processed.length; i++) {
+                processed[i].priority = processed[i].priority_level || 'medium';
+                processed[i].isDuplicate = false;
+                processed[i].duplicateCount = 0;
+                
+                if(!processed[i].latitude) continue;
+
+                for(let j=0; j<processed.length; j++) {
+                    if (i === j) continue;
+                    if (processed[i].category !== processed[j].category) continue;
+                    if (!processed[j].latitude) continue;
+
+                    const dist = getDistance(processed[i].latitude, processed[i].longitude, processed[j].latitude, processed[j].longitude);
+                    if (dist < 100) {
+                        processed[i].isDuplicate = true;
+                        processed[i].duplicateCount++;
+                    }
+                }
+            }
+
+            return processed;
+        }
+
+        function isSLABreached(p) {
+            if (p.status === 'solved') return false;
+            const created = new Date(p.created_at).getTime();
+            const now = new Date().getTime();
+            return (now - created) > (48 * 60 * 60 * 1000); // 48 hours simulated SLA
+        }
+
+        function renderQueue() {
+            const tbody = document.getElementById('queueBody');
+            if (problems.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-12 text-slate-500 font-medium">No tickets in the queue.</td></tr>`;
+                return;
+            }
+
+            let html = '';
+            problems.forEach(p => {
+                const cat = PROBLEM_CATEGORIES[p.category] || PROBLEM_CATEGORIES['other'];
+                const breached = isSLABreached(p);
+                const lang = LANG_MAP[p.language_code || 'en'] || 'English';
+                
+                // Privacy redaction logic - partially obscure names
+                const anonId = p.user_id ? p.user_id.substring(0,6) : 'ANON';
+                
+                // Priority & Escalation Styling
+                let trClass = 'hover:bg-slate-50 transition-colors group';
+                let priIndicator = p.priority_level ? p.priority_level.charAt(0).toUpperCase() : 'M';
+                let priClass = 'priority-med text-slate-500';
+                
+                if (p.priority === 'high' || p.priority === 'critical') priClass = 'priority-high text-red-600';
+                if (p.priority === 'low') priClass = 'priority-low text-blue-500';
+                
+                // SLA Auto-Escalation UI (Flashing red for breached unresolved tickets)
+                if (breached && p.status !== 'solved') {
+                    trClass += ' bg-red-50/60 hover:bg-red-50'; // Slight red tint
+                    priIndicator = '<span class="flex h-3.5 w-3.5 mx-auto relative"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span><span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-600"></span></span>';
+                }
+
+                html += `
+                    <tr class="${trClass}">
+                        <td class="text-center ${priClass} font-bold align-middle">
+                            ${priIndicator}
+                        </td>
+                        <td>
+                            <div class="mb-1">
+                                <span class="font-bold text-slate-900">${p.title || 'Untitled'}</span>
+                                ${p.isDuplicate ? `<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200 uppercase tracking-wider"><svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg> ${p.duplicateCount} Nearby Duplicates</span>` : ''}
+                            </div>
+                            <p class="text-sm text-slate-600 line-clamp-2 max-w-sm mb-2">${p.description || ''}</p>
+                            <div class="flex items-center space-x-3 text-xs font-medium text-slate-400">
+                                <span class="flex items-center"><svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> ${new Date(p.created_at).toLocaleDateString()}</span>
+                                <span class="flex items-center"><svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path></svg> ${lang}</span>
+                                <span class="flex items-center"><svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg> ID: ${anonId}...</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="font-bold text-slate-800 text-sm mb-1">${cat.dept}</div>
+                            <div class="text-xs text-slate-500 font-medium">${cat.emoji} ${cat.name}</div>
+                        </td>
+                        <td>
+                            ${p.status === 'solved' 
+                                ? `<div class="text-emerald-600 font-bold text-sm flex items-center"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Closed</div>` 
+                                : breached 
+                                    ? `<div class="text-red-600 font-bold text-sm flex items-center"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg> Breached</div><div class="w-full bg-red-100 rounded-full h-1.5 mt-2"><div class="bg-red-500 h-1.5 rounded-full" style="width: 100%"></div></div>`
+                                    : `<div class="text-emerald-600 font-bold text-sm">Within SLA</div><div class="w-full bg-slate-200 rounded-full h-1.5 mt-2"><div class="bg-emerald-500 h-1.5 rounded-full" style="width: 40%"></div></div>`
+                            }
+                        </td>
+                        <td>
+                            <span class="status-badge status-${p.status}">${p.status.replace('_', ' ')}</span>
+                        </td>
+                        <td class="text-right">
+                            ${p.status !== 'solved' ? 
+                                `<button onclick="openResolutionModal('${p.id}', '${(p.title || '').replace(/'/g, "\\'")}', '${p.category}')" class="bg-white border border-slate-300 text-gov-navy hover:text-blue-800 hover:border-blue-300 hover:bg-blue-50 font-bold py-2 px-4 rounded shadow-sm text-xs uppercase tracking-wide transition-all">Resolve</button>` 
+                                : `<span class="text-slate-400 font-medium text-xs uppercase tracking-widest">Archived</span>`
+                            }
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        // Tab Navigation
+        function switchTab(tabId) {
+            ['analytics', 'queue', 'map'].forEach(t => {
+                document.getElementById(`view-${t}`).classList.add('hidden');
+                const btn = document.getElementById(`nav-${t}`);
+                btn.classList.remove('bg-blue-50', 'text-gov-navy', 'border-blue-100');
+                btn.classList.add('text-slate-600', 'border-transparent');
+                
+                // Change icon color class
+                const svg = btn.querySelector('svg');
+                if(t !== tabId) {
+                    svg.classList.add('text-slate-400');
+                    btn.classList.remove('font-bold');
+                }
+            });
+
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            activeBtn.classList.remove('text-slate-600', 'border-transparent');
+            activeBtn.classList.add('bg-blue-50', 'text-gov-navy', 'border-blue-100', 'font-bold');
+            activeBtn.querySelector('svg').classList.remove('text-slate-400');
+
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+
+            const titles = {
+                'analytics': 'Overview & Analytics',
+                'queue': 'Triage Queue',
+                'map': 'Jurisdiction Hotspots'
+            };
+            document.getElementById('pageTitle').textContent = titles[tabId];
+
+            if (tabId === 'map') {
+                initMap();
+                setTimeout(() => { map.invalidateSize(); }, 100);
+            }
+        }
+
+        // Resolution Workflow
+        function openResolutionModal(id, title, category) {
+            document.getElementById('modalTicketId').value = id;
+            document.getElementById('modalTicketTitle').textContent = title;
+            document.getElementById('resolutionNotes').value = '';
+            document.getElementById('resolutionModal').classList.remove('hidden');
+            
+            // Generate SOP Plan
+            const plans = {
+                'infrastructure': 'Standard Procedure: Dispatch 1 Engineering Crew with heavy machinery. Inspect load-bearing elements. Est cost: ₹15,000. SLA: 8hrs.',
+                'sanitation': 'Standard Procedure: Deploy 2 Waste Management Units. Schedule biological hazard deep cleaning. Est cost: ₹2,000. SLA: 3hrs.',
+                'utilities': 'Standard Procedure: Send rapid response electrical/plumbing team. Isolate local grid to prevent cascades. Est cost: ₹5,500. SLA: 2hrs.',
+                'safety': 'Standard Procedure: Alert local precinct. Send hazard containment unit. Establish 50m perimeter. Priority 1 response required.',
+                'environment': 'Standard Procedure: Dispatch environmental assessment officer. Test local water/air samples. Prepare ecological report.',
+                'other': 'Standard Procedure: Assign general inspector for immediate field review. Prepare standard resolution report.'
+            };
+            const aiText = plans[category] || plans['other'];
+            
+            const txtNode = document.getElementById('aiActionText');
+            txtNode.textContent = 'Retrieving department guidelines...';
+            
+            // Simulate generation delay
+            setTimeout(() => {
+                txtNode.textContent = aiText;
+            }, 300);
+        }
+
+        function applyAIPlan() {
+            const aiText = document.getElementById('aiActionText').textContent;
+            if (aiText !== 'Retrieving department guidelines...') {
+                document.getElementById('resolutionNotes').value = aiText;
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('resolutionModal').classList.add('hidden');
+        }
+
+        document.getElementById('resolutionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('modalTicketId').value;
+            const notes = document.getElementById('resolutionNotes').value;
+            const btn = e.target.querySelector('button[type="submit"]');
+            
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="animate-pulse">Closing...</span>';
+            btn.disabled = true;
+
+            try {
+                const { error } = await supabaseClient
+                    .from('problems')
+                    .update({ 
+                        status: 'solved', 
+                        resolution_notes: notes,
+                        resolved_by: currentUser.id,
+                        resolved_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString() 
+                    })
+                    .eq('id', id);
+                    
+                if (error) throw error;
+                closeModal();
+                loadData(); // refresh
+            } catch (error) {
+                console.error(error);
+                alert("Failed to resolve ticket. Please try again.");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        // Map Implementation (Satellite)
+        function initMap() {
+            if (map) return;
+            map = L.map('map').setView([20.5937, 78.9629], 5); // Default India
+            
+            // Real Satellite Imagery (Esri World Imagery)
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+            }).addTo(map);
+            
+            updateMap();
+        }
+
+        function updateMap() {
+            if (!map) return;
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+
+            const validProblems = problems.filter(p => p.latitude && p.longitude);
+            
+            validProblems.forEach(p => {
+                const cat = PROBLEM_CATEGORIES[p.category] || PROBLEM_CATEGORIES['other'];
+                const breached = isSLABreached(p);
+                
+                let iconColor = '#3b82f6';
+                if(p.status === 'solved') iconColor = '#10b981';
+                else if (breached) iconColor = '#ef4444';
+                else if (p.isDuplicate) iconColor = '#f59e0b'; // Highlight duplicates
+
+                const customIcon = L.divIcon({
+                    html: `<div class="shadow-lg border-2 border-white flex items-center justify-center text-sm" style="background-color: ${iconColor}; width: 36px; height: 36px; border-radius: 50%;">${cat.emoji}</div>`,
+                    className: '',
+                    iconSize: [36, 36],
+                    iconAnchor: [18, 18]
+                });
+
+                const popupContent = `
+                    <div class="p-2 min-w-[240px] max-w-[280px] font-sans">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-slate-900 text-sm leading-tight">${p.title || 'Untitled'}</h4>
+                        </div>
+                        <p class="text-xs font-bold text-slate-600 mb-2 border-b pb-1">${cat.dept} - ${cat.name}</p>
+                        ${p.isDuplicate ? `<div class="bg-amber-50 text-amber-800 text-[10px] font-bold px-2 py-1 rounded mb-2 uppercase tracking-wide">⚠️ ${p.duplicateCount} Potential Duplicates Nearby</div>` : ''}
+                        <p class="text-xs text-slate-600 mb-3 line-clamp-3">${p.description || 'No description provided.'}</p>
+                        
+                        <div class="space-y-1 mt-2 bg-slate-50 p-2 rounded border border-slate-100">
+                            <div class="flex justify-between text-[10px] font-medium">
+                                <span class="text-slate-400">Created:</span>
+                                <span class="text-slate-700">${new Date(p.created_at).toLocaleDateString()}</span>
+                            </div>
+                            <div class="flex justify-between text-[10px] font-medium">
+                                <span class="text-slate-400">Status:</span>
+                                <span class="text-slate-700 uppercase font-bold">${p.status}</span>
+                            </div>
+                            <div class="flex justify-between text-[10px] font-medium">
+                                <span class="text-slate-400">SLA Status:</span>
+                                <span class="${breached ? 'text-red-600 font-bold' : 'text-emerald-600 font-bold'}">${breached ? 'Breached' : 'Within Limit'}</span>
+                            </div>
+                            ${p.priority_level ? `
+                            <div class="flex justify-between text-[10px] font-medium">
+                                <span class="text-slate-400">Priority:</span>
+                                <span class="text-slate-700 uppercase font-bold">${p.priority_level}</span>
+                            </div>` : ''}
+                        </div>
+                    </div>
+                `;
+
+                const marker = L.marker([p.latitude, p.longitude], { icon: customIcon })
+                    .bindPopup(popupContent, {
+                        closeButton: false,
+                        offset: [0, -10]
+                    });
+                
+                // Show info on hover
+                marker.on('mouseover', function (e) {
+                    this.openPopup();
+                });
+                marker.on('mouseout', function (e) {
+                    this.closePopup();
+                });
+                
+                marker.addTo(map);
+                markers.push(marker);
+            });
+
+            if (markers.length > 0) {
+                const group = new L.featureGroup(markers);
+                map.fitBounds(group.getBounds().pad(0.1));
+            }
+        }
+
+        // Analytics Implementation
+        function initCharts() {
+            Chart.defaults.font.family = 'Inter, sans-serif';
+            Chart.defaults.color = '#64748b';
+            
+            const catCtx = document.getElementById('categoryChart').getContext('2d');
+            charts.category = new Chart(catCtx, {
+                type: 'doughnut',
+                data: { labels: [], datasets: [{ data: [], backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#64748b'], borderWidth: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }, tooltip: { padding: 12, cornerRadius: 8 } }, cutout: '75%' }
+            });
+
+            const langCtx = document.getElementById('languageChart').getContext('2d');
+            charts.language = new Chart(langCtx, {
+                type: 'bar',
+                data: { labels: [], datasets: [{ label: 'Reports', data: [], backgroundColor: '#10b981', borderRadius: 6 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { borderDash: [4, 4], color: '#f1f5f9' } }, x: { grid: { display: false } } } }
+            });
+
+            const strainCtx = document.getElementById('strainChart').getContext('2d');
+            charts.strain = new Chart(strainCtx, {
+                type: 'radar',
+                data: { 
+                    labels: [], 
+                    datasets: [{ 
+                        label: 'Active Strain', 
+                        data: [], 
+                        backgroundColor: 'rgba(59, 130, 246, 0.4)', 
+                        borderColor: '#3b82f6', 
+                        pointBackgroundColor: '#ef4444',
+                        borderWidth: 2
+                    }] 
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } }, 
+                    scales: { 
+                        r: { 
+                            angleLines: { color: 'rgba(255,255,255,0.1)' },
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            pointLabels: { color: '#94a3b8', font: { size: 9, weight: 'bold' } },
+                            ticks: { display: false }
+                        } 
+                    } 
+                }
+            });
+        }
+
+        function updateAnalytics() {
+            // Update Top Stats
+            const resolved = problems.filter(p => p.status === 'solved').length;
+            const breached = problems.filter(p => isSLABreached(p)).length;
+            const pending = problems.length - resolved;
+            
+            document.getElementById('statTotal').textContent = problems.length;
+            document.getElementById('statPending').textContent = pending;
+            document.getElementById('statBreached').textContent = breached;
+            document.getElementById('statResolved').textContent = resolved;
+            document.getElementById('queueBadge').textContent = pending;
+
+            // Process Chart Data
+            const catCounts = {};
+            const langCounts = {};
+            const strainScores = {};
+            
+            problems.forEach(p => {
+                const cName = (PROBLEM_CATEGORIES[p.category] || PROBLEM_CATEGORIES['other']).name;
+                const dName = (PROBLEM_CATEGORIES[p.category] || PROBLEM_CATEGORIES['other']).dept;
+                
+                catCounts[cName] = (catCounts[cName] || 0) + 1;
+                
+                const lName = LANG_MAP[p.language_code || 'en'] || 'English';
+                langCounts[lName] = (langCounts[lName] || 0) + 1;
+
+                if (p.status !== 'solved') {
+                    strainScores[dName] = (strainScores[dName] || 0) + (isSLABreached(p) ? 5 : 1);
+                }
+            });
+
+            if(charts.category) {
+                charts.category.data.labels = Object.keys(catCounts);
+                charts.category.data.datasets[0].data = Object.values(catCounts);
+                charts.category.update();
+            }
+
+            if(charts.language) {
+                charts.language.data.labels = Object.keys(langCounts);
+                charts.language.data.datasets[0].data = Object.values(langCounts);
+                charts.language.update();
+            }
+
+            if(charts.strain && Object.keys(strainScores).length > 0) {
+                charts.strain.data.labels = Object.keys(strainScores);
+                charts.strain.data.datasets[0].data = Object.values(strainScores);
+                charts.strain.update();
+            }
+        }
+    </script>
+</body>
+</html>

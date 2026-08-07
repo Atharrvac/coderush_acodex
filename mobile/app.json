@@ -1,0 +1,58 @@
+{
+  "expo": {
+    "name": "JanMitra",
+    "slug": "janmitra",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "janmitra",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.janmitra.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "JanMitra needs your location to tag complaints and find nearby offices."
+      }
+    },
+    "android": {
+      "package": "com.janmitra.app",
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "template": "./web/index.html",
+      "build": {
+        "babel": {
+          "include": [
+            "nativewind/babel"
+          ]
+        }
+      }
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#16A34A"
+        }
+      ],
+      "expo-secure-store",
+      "expo-image-picker",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "NagrikSeva needs your location to tag complaints and find nearby offices."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

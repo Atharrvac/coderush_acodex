@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta httpEquiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: data:; object-src 'none'; base-uri 'self'; img-src 'self' data: https: blob:; style-src 'self' 'unsafe-inline' https:; font-src 'self' data: https:; connect-src 'self' https: wss: ws:;" />
+  
+  <title>NagrikSeva - Citizen Services Platform</title>
+  <meta name="description" content="AI-Powered Complaint System for Citizens" />
+  
+  <style>
+    html, body, #root {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    body {
+      background-color: #f8fafc;
+    }
+    
+    /* Loading screen */
+    .loading-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #1E40AF 0%, #1D4ED8 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      z-index: 9999;
+    }
+    
+    .loading-logo {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    
+    .loading-title {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    
+    .loading-subtitle {
+      font-size: 16px;
+      opacity: 0.8;
+      margin-bottom: 32px;
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top: 3px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <div class="loading-screen" id="loading-screen">
+      <div class="loading-logo">🏛️</div>
+      <div class="loading-title">NagrikSeva</div>
+      <div class="loading-subtitle">AI-Powered Complaint System</div>
+      <div class="loading-spinner"></div>
+    </div>
+  </div>
+  
+  <script>
+    // Hide loading screen when app loads
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+          loadingScreen.style.opacity = '0';
+          loadingScreen.style.transition = 'opacity 0.5s ease';
+          setTimeout(function() {
+            loadingScreen.style.display = 'none';
+          }, 500);
+        }
+      }, 1000);
+    });
+  </script>
+</body>
+</html>
