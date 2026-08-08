@@ -1,103 +1,95 @@
-# 🏛️ NagrikSeva - Citizen-to-Citizen Help Platform
+# 🏛️ JanMitra - Citizen Civic Reporting Platform
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![React Native](https://img.shields.io/badge/React%20Native-0.81-blue.svg)](https://reactnative.dev/)
-[![Expo](https://img.shields.io/badge/Expo-54-black.svg)](https://expo.dev/)
+[![React Native](https://img.shields.io/badge/React%20Native-Latest-blue.svg)](https://reactnative.dev/)
+[![Expo](https://img.shields.io/badge/Expo-SDK%2054-black.svg)](https://expo.dev/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green.svg)](https://supabase.com/)
 
-> **Empowering citizens to solve local civic problems together**
+> **Empowering citizens to report civic issues with AI-powered assistance and government dashboard monitoring**
 
-NagrikSeva (meaning "Citizen Service" in Hindi) is a mobile application that enables community members to report local civic issues and help each other solve them through direct peer-to-peer collaboration.
-
----
-
-## 📱 Features
-
-### For Problem Posters
-- 📸 **Photo Upload** - Capture and upload up to 5 images
-- 📍 **GPS Location** - Auto-detect or manually search any location
-- 🏷️ **8 Categories** - Road, Water, Electricity, Garbage, Parks, Traffic, Infrastructure, Other
-- 🔔 **Real-time Notifications** - Get notified when someone offers help
-- 📊 **Track Status** - Monitor problems from posted → being helped → solved
-
-### For Helpers
-- 🗺️ **Browse Feed** - See all nearby problems
-- 🔍 **Filter & Sort** - By category, status, distance, or time
-- 🤝 **Offer Help** - Click "I Can Help" to volunteer
-- 💬 **Direct Contact** - Call or message problem posters
-- ✅ **Mark Solved** - Document solution with before/after photos
-
-### For Everyone
-- 🏆 **Contribution Stats** - Track problems posted, helping, and solved
-- 🌍 **Map View** - See all problems on an interactive map
-- 🔄 **Real-time Updates** - Live feed updates via Supabase
-- 🎨 **Beautiful UI** - Modern, intuitive design with smooth animations
+JanMitra (meaning "People's Friend" in Hindi) is a comprehensive civic engagement platform that enables citizens to report local infrastructure problems through a mobile app, while providing government officials with an intelligent dashboard for real-time monitoring, SMS notifications, and AI-assisted problem resolution.
 
 ---
 
-## 🎯 Why NagrikSeva?
-
-### The Problem
-- Government complaint systems are slow (weeks/months)
-- Citizens feel helpless about local issues
-- No transparency in problem resolution
-- Communities lack connection and collective action
-
-### The Solution
-- **Peer-to-peer help** - Neighbors helping neighbors directly
-- **Fast resolution** - Get help in hours/days, not months
-- **Public transparency** - Everyone sees what's happening
-- **Community building** - Creates social bonds and trust
-
----
-
-## 🏗️ Architecture
+## 📱 System Architecture
 
 ```
-┌─────────────────┐
-│   Mobile App    │
-│  (React Native) │
-│     + Expo      │
-└────────┬────────┘
+┌──────────────────┐
+│   Mobile App     │
+│  (React Native)  │
+│   + Expo + AI    │
+└────────┬─────────┘
          │
-         │ Direct Connection
-         │
+         │ Real-time Sync
          ▼
-┌─────────────────┐
-│    Supabase     │
-│  ┌───────────┐  │
-│  │PostgreSQL │  │ ← Database
-│  ├───────────┤  │
-│  │   Auth    │  │ ← Authentication
-│  ├───────────┤  │
-│  │  Storage  │  │ ← Image Storage
-│  ├───────────┤  │
-│  │ Real-time │  │ ← Live Updates
-│  └───────────┘  │
-└─────────────────┘
+┌──────────────────┐        ┌──────────────────┐
+│    Supabase      │◄──────►│  Government      │
+│   PostgreSQL     │        │   Dashboard      │
+│  + Auth + RLS    │        │   (Web Portal)   │
+└────────┬─────────┘        └────────┬─────────┘
+         │                           │
+         │                           │
+         ▼                           ▼
+┌──────────────────┐        ┌──────────────────┐
+│   AI Services    │        │   SMS Gateway    │
+│  Image Analysis  │        │  Fast2SMS/       │
+│  Auto-Translate  │        │  TextLocal       │
+└──────────────────┘        └──────────────────┘
 ```
 
-### Tech Stack
+---
 
-**Mobile App:**
-- React Native 0.81
-- Expo 54
-- TypeScript
-- NativeWind (Tailwind CSS)
-- Expo Router (navigation)
-- Expo Location (GPS)
-- Expo Image Picker (camera)
+## ✨ Key Features
 
-**Backend:**
-- Supabase (PostgreSQL)
-- Supabase Auth (JWT)
-- Supabase Storage (images)
-- Supabase Realtime (live updates)
-- Row-Level Security (RLS)
+### 🎯 For Citizens (Mobile App)
 
-**External Services:**
-- OpenStreetMap (location search - FREE!)
-- Expo Application Services (builds)
+#### Problem Reporting
+- 📸 **Multi-Image Upload** - Capture up to 5 photos with auto-compression
+- 📍 **GPS Location** - Automatic location detection with manual search fallback
+- 🏷️ **Smart Categories** - 15+ civic issue types (roads, water, electricity, etc.)
+- 🗣️ **Multi-language** - Hindi, English, Marathi support with auto-translation
+- 🤖 **AI Image Analysis** - Automatic problem severity and category detection
+
+#### Tracking & Communication
+- 🔔 **Real-time Notifications** - Get updates when issues are being addressed
+- 📊 **Status Tracking** - Monitor: Posted → Being Helped → Solved
+- 💬 **In-app Comments** - Communicate with field officers
+- � **Personal Dashboard** - Track all your reported issues
+
+#### Community Features
+- 🗺️ **Map View** - See all nearby civic problems
+- 🔍 **Filter & Search** - By category, status, location, date
+- 👍 **Upvote Issues** - Support important problems
+- 📱 **Offline Support** - Queue reports when offline
+
+---
+
+### 🏛️ For Government (Web Dashboard)
+
+#### Real-time Intelligence
+- � **Analytics Dashboard** - Visual statistics and trends
+- 🗺️ **Geospatial Intelligence** - Interactive map with hotspot clustering
+- 🎯 **Triage Queue** - Prioritized issue management
+- 📈 **SLA Monitoring** - Track response times and breaches
+
+#### Field Operations
+- 📱 **SMS Integration** - Send real SMS to field officers (Fast2SMS/TextLocal)
+- 🚨 **Auto-escalation** - Escalate unresolved issues automatically
+- 👮 **Officer Assignment** - Assign issues to specific departments/officers
+- ✅ **Resolution Workflow** - Mark issues as solved with documentation
+
+#### AI-Powered Features
+- 🤖 **AI Recommendations** - Suggested action plans for each issue
+- 📸 **Image Analysis** - Auto-detect problem type and severity
+- 🔄 **Duplicate Detection** - Identify similar nearby reports
+- 📊 **Predictive Analytics** - Forecast problem hotspots
+
+#### Professional Design
+- 🎨 **Premium Typography** - Crimson Text, IBM Plex Sans, JetBrains Mono
+- 🏛️ **Government Aesthetic** - Official tricolor, clean professional interface
+- 📱 **Responsive Design** - Works on desktop and tablets
+- 🔒 **Secure Authentication** - Officer-level access control
 
 ---
 
@@ -105,24 +97,22 @@ NagrikSeva (meaning "Citizen Service" in Hindi) is a mobile application that ena
 
 ### Prerequisites
 - Node.js 18+
-- npm or yarn
+- Python 3.8+ (for government dashboard server)
 - Expo CLI
-- Supabase account (free)
+- Supabase account (free tier works)
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/yourusername/nagrikseva.git
-cd nagrikseva
+git clone https://github.com/yourusername/janmitra.git
+cd janmitra
 ```
 
-### 2. Set Up Supabase
+### 2. Set Up Supabase Database
 ```bash
 # 1. Create project at https://supabase.com
-# 2. Run database schema:
-#    - Go to SQL Editor
-#    - Copy/paste backend/database/nagrikseva_citizen_v2.sql
-#    - Run query
-# 3. Get API keys from Settings → API
+# 2. Go to SQL Editor
+# 3. Run: backend/database/nagrikseva_citizen_v2.sql
+# 4. Get API keys from Settings → API
 ```
 
 ### 3. Configure Mobile App
@@ -131,141 +121,331 @@ cd mobile
 cp .env.example .env
 # Edit .env with your Supabase credentials
 npm install
-```
-
-### 4. Run App
-```bash
 npx expo start
 # Scan QR code with Expo Go app
 ```
 
+### 4. Set Up Backend API (Optional - for SMS)
+```bash
+cd backend
+npm install
+# Edit src/config/supabase.js with your credentials
+npm start
+# Runs on http://localhost:3000
+```
+
+### 5. Launch Government Dashboard
+```bash
+cd government-dashboard
+python3 -m http.server 3001
+# Access at http://localhost:3001
+# Login: officer.demo@gov.in / password123
+```
+
 ---
 
-## 📚 Documentation
-
-- **[User Experience Analysis](USER_EXPERIENCE_ANALYSIS.md)** - Detailed UX breakdown
-- **[Production Deployment Plan](PRODUCTION_READY_PLAN.md)** - Complete deployment guide
-- **[Quick Start Deployment](QUICK_START_DEPLOYMENT.md)** - Deploy in 2 hours
-- **[Privacy Policy](PRIVACY_POLICY.md)** - User privacy and data handling
-- **[Terms of Service](TERMS_OF_SERVICE.md)** - Legal terms and conditions
-
----
-
-## 🗂️ Project Structure
+## 🏗️ Project Structure
 
 ```
-nagrikseva/
-├── mobile/                      # React Native mobile app
-│   ├── app/                     # Expo Router screens
-│   │   ├── (tabs)/             # Tab navigation
-│   │   │   ├── index.tsx       # Feed screen
-│   │   │   ├── post.tsx        # Post problem
-│   │   │   ├── activity.tsx    # User activity
-│   │   │   ├── map.tsx         # Map view
-│   │   │   └── profile.tsx     # User profile
-│   │   ├── login.tsx           # Login screen
-│   │   ├── register.tsx        # Registration
-│   │   └── problem-details.tsx # Problem details
+janmitra/
+├── mobile/                          # React Native mobile app
+│   ├── app/                        # Expo Router screens
+│   │   ├── (tabs)/                # Tab navigation
+│   │   │   ├── index.tsx          # Feed screen
+│   │   │   ├── post.tsx           # Post problem
+│   │   │   ├── activity.tsx       # User activity
+│   │   │   ├── map.tsx            # Map view
+│   │   │   └── profile.tsx        # User profile
+│   │   ├── login.tsx              # Login screen
+│   │   ├── register.tsx           # Registration
+│   │   └── problem-details.tsx    # Problem details
 │   ├── src/
-│   │   ├── components/         # Reusable UI components
-│   │   ├── config/            # API & Supabase config
-│   │   ├── constants/         # Categories, statuses
-│   │   ├── contexts/          # Auth context
-│   │   ├── services/          # API services
-│   │   ├── types/             # TypeScript types
-│   │   └── utils/             # Helper functions
-│   ├── assets/                # Images, fonts
-│   ├── .env                   # Environment variables
-│   ├── app.json              # Expo configuration
-│   ├── eas.json              # EAS build config
-│   └── package.json          # Dependencies
+│   │   ├── components/            # Reusable UI components
+│   │   ├── config/                # API & Supabase config
+│   │   ├── constants/             # Categories, statuses
+│   │   ├── contexts/              # Auth & Language context
+│   │   ├── services/              # API services
+│   │   ├── types/                 # TypeScript types
+│   │   └── utils/                 # Helper functions
+│   ├── .env                       # Environment variables
+│   ├── app.json                   # Expo configuration
+│   └── package.json               # Dependencies
 │
-├── backend/                   # Backend (optional - not used currently)
-│   ├── database/             # Database schemas
-│   │   └── nagrikseva_citizen_v2.sql
-│   └── src/                  # Express server (future use)
+├── backend/                        # Node.js backend API
+│   ├── src/
+│   │   ├── config/                # Supabase configuration
+│   │   ├── controllers/           # Request handlers
+│   │   ├── routes/                # API routes
+│   │   │   ├── sms.js            # SMS notification routes
+│   │   │   └── ai.routes.js      # AI analysis routes
+│   │   ├── services/
+│   │   │   └── sms.service.js    # SMS integration (Fast2SMS/TextLocal)
+│   │   └── server.js              # Express server
+│   ├── database/
+│   │   └── nagrikseva_citizen_v2.sql  # Database schema
+│   └── package.json
+│
+├── government-dashboard/           # Government web portal
+│   ├── index.html                 # Main dashboard (single-page app)
+│   ├── supabase.js               # Supabase client
+│   ├── index-backup.html          # Backup version
+│   └── README.md
 │
 ├── .github/
 │   └── workflows/
-│       └── build.yml         # CI/CD pipeline
+│       └── build.yml              # CI/CD pipeline
 │
-├── PRIVACY_POLICY.md         # Privacy policy
-├── TERMS_OF_SERVICE.md       # Terms of service
-├── USER_EXPERIENCE_ANALYSIS.md
-├── PRODUCTION_READY_PLAN.md
-├── QUICK_START_DEPLOYMENT.md
-└── README.md                 # This file
+├── GOVERNMENT_DASHBOARD_REDESIGN_COMPLETE.md
+├── SMS_SYSTEM_COMPLETE.md
+├── PRIVACY_POLICY.md
+├── TERMS_OF_SERVICE.md
+└── README.md                       # This file
 ```
 
 ---
 
-## 🔒 Security
+## 🔧 Tech Stack
 
-- **Row-Level Security (RLS)** - Database-level access control
+### Mobile App
+- **React Native** - Cross-platform mobile framework
+- **Expo SDK 54** - Development tooling & services
+- **TypeScript** - Type-safe development
+- **NativeWind** - Tailwind CSS for React Native
+- **Expo Router** - File-based navigation
+- **Expo Location** - GPS & location services
+- **Expo Image Picker** - Camera & gallery access
+
+### Backend API
+- **Node.js 18+** - JavaScript runtime
+- **Express.js** - Web framework
+- **Supabase Client** - Database & auth SDK
+- **Fast2SMS / TextLocal** - SMS gateway integration
+
+### Database & Auth
+- **Supabase (PostgreSQL)** - Primary database
+- **Row-Level Security (RLS)** - Database-level security
 - **JWT Authentication** - Secure token-based auth
-- **Input Sanitization** - XSS prevention
-- **Content Moderation** - Banned words filtering
-- **Rate Limiting** - Prevent abuse
-- **HTTPS Only** - Encrypted data transmission
-- **Secure Storage** - Encrypted local storage
+- **Supabase Storage** - Image hosting
 
----
+### Government Dashboard
+- **HTML5 / CSS3 / JavaScript** - Single-page application
+- **Tailwind CSS** - Utility-first styling
+- **Leaflet.js** - Interactive maps
+- **Leaflet MarkerCluster** - Hotspot visualization
+- **Chart.js** - Analytics charts (planned)
 
-## 📊 Database Schema
-
-### Tables
-- **users** - User profiles and stats
-- **problems** - Civic problem posts
-- **problem_helpers** - Help offers
-- **problem_comments** - Comments (future)
-- **alerts** - Notifications
-
-### Key Features
-- Automatic user profile creation on signup
-- Trigger-based notifications
-- Automatic stats updates
-- Real-time subscriptions
-- Public storage for images
+### External Services
+- **OpenStreetMap** - Location search (FREE)
+- **Fast2SMS** - SMS notifications (India)
+- **TextLocal** - Alternative SMS provider
+- **Expo Application Services** - App builds
 
 ---
 
 ## 🎨 Design System
 
-### Colors
-- **Primary**: Green (#16A34A) - Help, growth, positivity
-- **Status Colors**:
-  - Yellow (#F59E0B) - Posted (waiting)
-  - Blue (#3B82F6) - Being Helped (in progress)
-  - Green (#10B981) - Solved (completed)
-
 ### Typography
-- **Headings**: 18-24px, Bold
-- **Body**: 15px, Regular
-- **Captions**: 12-13px, Medium
+- **Headings**: Crimson Text (serif) - 18-36px, Bold
+- **Body**: IBM Plex Sans (sans-serif) - 14-16px, Regular
+- **Technical**: JetBrains Mono (monospace) - 12-14px, Medium
+- **Hindi**: Noto Sans Devanagari
 
-### Components
-- Card-based layouts
-- Rounded corners (16-24px)
-- Smooth shadows
-- Gradient headers
-- Emoji-based categories
+### Colors
+- **Government Primary**: Navy Blue (#0F4A85)
+- **Government Accent**: Saffron (#FF9933)
+- **Success/Solved**: Green (#16A34A)
+- **Warning/Pending**: Amber (#F59E0B)
+- **Danger/Breached**: Red (#DC2626)
+- **In Progress**: Blue (#3B82F6)
+
+### UI Patterns
+- Card-based layouts with subtle shadows
+- Rounded corners (8-16px)
+- Gradient headers (tricolor for government)
+- SVG icons (no emojis in dashboard)
+- Clean white backgrounds
+- Color-coded status badges
+
+---
+
+## 🔒 Security Features
+
+### Database Security
+- **Row-Level Security (RLS)** - User can only see their own data
+- **JWT Authentication** - Secure token-based sessions
+- **API Key Protection** - Environment variables for secrets
+- **SQL Injection Prevention** - Parameterized queries
+
+### Application Security
+- **Input Sanitization** - XSS prevention
+- **Content Moderation** - Banned words filtering
+- **Rate Limiting** - Prevent API abuse (planned)
+- **HTTPS Only** - Encrypted data transmission
+- **Secure Storage** - Encrypted local storage
+
+### Privacy
+- **Minimal Data Collection** - Only essential information
+- **No Third-party Tracking** - Privacy-focused
+- **Data Retention Policy** - Clear deletion rules
+- **User Consent** - Explicit permission for location/camera
+
+---
+
+## 📊 Database Schema
+
+### Main Tables
+
+#### `users`
+- User profiles and authentication
+- Activity statistics (problems posted, helping, solved)
+- Contact information
+
+#### `problems`
+- Civic issue reports
+- Images, location, category, description
+- Status tracking (posted → being_helped → solved)
+- AI analysis results
+
+#### `problem_helpers`
+- Help offers from citizens/officers
+- Assignment tracking
+
+#### `alerts`
+- In-app notifications
+- SMS delivery status
+
+#### `problem_comments`
+- Communication between citizens and officers
+
+### Key Features
+- Automatic profile creation on signup
+- Trigger-based notification system
+- Real-time subscriptions
+- Public image storage buckets
+- Automatic stats updates
+
+---
+
+## 📱 SMS Integration
+
+### Supported Providers
+1. **Fast2SMS** (Recommended for India)
+   - Website: https://www.fast2sms.com
+   - Cost: ~₹0.15-0.20 per SMS
+   - API: REST
+
+2. **TextLocal** (Alternative)
+   - Website: https://www.textlocal.in
+   - Cost: Similar pricing
+   - API: REST
+
+### Configuration
+```javascript
+// backend/src/services/sms.service.js
+this.isDemoMode = true;  // Set to false for production
+this.apiKey = process.env.FAST2SMS_API_KEY;
+```
+
+### Environment Variables
+```bash
+FAST2SMS_API_KEY=your-api-key-here
+TEXTLOCAL_API_KEY=your-backup-key
+```
+
+### SMS Features
+- Officer assignment notifications
+- Escalation alerts
+- Bulk messaging
+- Delivery status tracking
+- Automatic retry on failure
+
+---
+
+## 🚀 Deployment
+
+### Mobile App (Expo)
+```bash
+cd mobile
+
+# Development build
+npx expo start
+
+# Production build
+eas build --platform android
+eas build --platform ios
+
+# Submit to stores
+eas submit --platform android
+eas submit --platform ios
+```
+
+### Backend API (Node.js)
+```bash
+# Deploy to any Node.js hosting:
+# - Heroku
+# - Railway.app
+# - Render.com
+# - DigitalOcean App Platform
+
+cd backend
+npm install
+npm start
+```
+
+### Government Dashboard
+```bash
+# Deploy to any static hosting:
+# - Vercel
+# - Netlify
+# - GitHub Pages
+# - Firebase Hosting
+
+cd government-dashboard
+# Upload index.html + supabase.js
+```
+
+---
+
+## 💰 Cost Breakdown
+
+### Free Tier (0-50K users)
+- Supabase: $0/month
+- Expo: $0/month
+- Backend Hosting: $0-5/month (Railway/Render)
+- **Total: $0-5/month**
+
+### Production (50K+ users)
+- Supabase Pro: $25/month
+- Expo: $0/month
+- Backend Hosting: $7-25/month
+- SMS: ~$20-100/month (usage-based)
+- **Total: $52-150/month**
+
+### One-time Costs
+- Google Play Console: $25 (lifetime)
+- Apple Developer Program: $99/year
+- Domain name: $10-15/year
 
 ---
 
 ## 🧪 Testing
 
 ### Manual Testing Checklist
-- [ ] User registration
-- [ ] User login
+- [ ] User registration & login
 - [ ] Post problem with photos
 - [ ] GPS location detection
 - [ ] Manual location search
 - [ ] View problem feed
-- [ ] Filter and sort
+- [ ] Filter and sort issues
 - [ ] Offer help
 - [ ] Mark as solved
 - [ ] Notifications
 - [ ] Profile editing
+- [ ] Government dashboard login
+- [ ] Map view with pins
+- [ ] SMS sending (demo mode)
+- [ ] Officer assignment
+- [ ] AI recommendations
 
 ### Device Testing
 - [ ] Android 10+
@@ -278,57 +458,39 @@ nagrikseva/
 
 ## 📈 Roadmap
 
-### Phase 1: MVP (Current)
-- ✅ User authentication
-- ✅ Post problems
-- ✅ Browse feed
-- ✅ Offer help
-- ✅ Mark solved
-- ✅ Notifications
-- ✅ Map view
+### ✅ Phase 1: MVP (Current)
+- User authentication
+- Post problems with images
+- GPS location
+- Government dashboard
+- SMS notifications
+- Real-time updates
+- Map view
+- AI image analysis
 
-### Phase 2: Enhanced Features
+### 🚧 Phase 2: Enhanced Features
 - [ ] Comments on problems
 - [ ] Upvoting/downvoting
 - [ ] Badges and leaderboards
 - [ ] Verified helpers
-- [ ] Multi-language support
+- [ ] Advanced AI recommendations
 - [ ] Dark mode
+- [ ] Offline mode improvements
 
-### Phase 3: Community Features
-- [ ] Events (cleanup drives)
-- [ ] Donations for projects
-- [ ] Government integration
-- [ ] Analytics dashboard
-- [ ] Community challenges
-
-### Phase 4: Scale
-- [ ] City-specific customization
+### 📅 Phase 3: Scale & Integration
+- [ ] Government API integration
+- [ ] Analytics & reporting
+- [ ] Multi-city customization
 - [ ] Admin panel
 - [ ] Moderation tools
-- [ ] Advanced analytics
-- [ ] API for third parties
+- [ ] Third-party API
 
----
-
-## 💰 Cost Breakdown
-
-### Development (One-time)
-- Development: Free (DIY) or $5,000-10,000 (hire)
-- Google Play Console: $25
-- Apple Developer: $99/year
-- Domain: $10-15/year
-
-### Running Costs (Monthly)
-- **Free Tier** (0-50K users):
-  - Supabase: $0
-  - Expo: $0
-  - Total: **$0/month**
-
-- **Pro Tier** (50K+ users):
-  - Supabase Pro: $25/month
-  - Expo: $0
-  - Total: **$25/month**
+### � Phase 4: Advanced Features
+- [ ] Video uploads
+- [ ] Live streaming for urgent issues
+- [ ] Chatbot support
+- [ ] Voice commands
+- [ ] Augmented reality for problem visualization
 
 ---
 
@@ -345,9 +507,10 @@ We welcome contributions! Here's how:
 ### Development Guidelines
 - Follow existing code style
 - Write meaningful commit messages
-- Test on real devices
+- Test on real devices before submitting
 - Update documentation
 - Add comments for complex logic
+- Follow security best practices
 
 ---
 
@@ -359,77 +522,81 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👥 Team
 
-- **Developer**: [Your Name]
-- **Designer**: [Designer Name]
-- **Support**: support@nagrikseva.app
+- **Lead Developer**: [Your Name]
+- **UI/UX Design**: [Designer Name]
+- **Support**: support@janmitra.app
 
 ---
 
 ## 🙏 Acknowledgments
 
-- **Supabase** - Amazing backend platform
+- **Supabase** - Excellent backend-as-a-service platform
 - **Expo** - Simplified React Native development
-- **OpenStreetMap** - Free location services
-- **Community** - All the citizens making their neighborhoods better
+- **OpenStreetMap** - Free geolocation services
+- **Fast2SMS** - Reliable SMS gateway for India
+- **Community** - All citizens and officials making their communities better
 
 ---
 
 ## 📞 Contact
 
-- **Email**: support@nagrikseva.app
-- **Website**: https://nagrikseva.app
-- **Twitter**: @nagrikseva
-- **Instagram**: @nagrikseva
+- **Email**: support@janmitra.app
+- **Website**: https://janmitra.app
+- **GitHub**: https://github.com/yourusername/janmitra
+- **Twitter**: @janmitra
+- **LinkedIn**: /company/janmitra
 
 ---
 
 ## 🌟 Show Your Support
 
-If you find this project helpful, please:
+If you find this project helpful:
 - ⭐ Star this repository
-- 🐛 Report bugs
+- 🐛 Report bugs via Issues
 - 💡 Suggest features
 - 📢 Share with others
 - 🤝 Contribute code
-
----
-
-## 📸 Screenshots
-
-### Feed Screen
-![Feed Screen](screenshots/feed.png)
-
-### Post Problem
-![Post Problem](screenshots/post.png)
-
-### Problem Details
-![Problem Details](screenshots/details.png)
-
-### Activity
-![Activity](screenshots/activity.png)
+- 📝 Improve documentation
 
 ---
 
 ## 🎯 Mission
 
-**"Empowering citizens to solve local problems together, building stronger, more connected communities."**
+**"Empowering citizens to report civic issues efficiently, enabling governments to respond effectively, building smarter and more livable communities."**
 
-NagrikSeva is more than an app - it's a movement toward community self-reliance and civic empowerment.
-
----
-
-**Made with ❤️ for citizens, by citizens**
+JanMitra bridges the gap between citizens and government through technology, creating transparent, accountable, and responsive civic infrastructure.
 
 ---
 
-## 🔗 Links
+## 📸 Screenshots
 
-- [User Experience Analysis](USER_EXPERIENCE_ANALYSIS.md)
-- [Production Deployment Guide](PRODUCTION_READY_PLAN.md)
-- [Quick Start Guide](QUICK_START_DEPLOYMENT.md)
+### Mobile App
+![Feed Screen](screenshots/feed.png)
+![Post Problem](screenshots/post.png)
+![Problem Details](screenshots/details.png)
+![Map View](screenshots/map.png)
+
+### Government Dashboard
+![Analytics Dashboard](screenshots/dashboard-analytics.png)
+![Geospatial Intelligence](screenshots/dashboard-map.png)
+![Triage Queue](screenshots/dashboard-queue.png)
+
+---
+
+## 🔗 Important Links
+
+- [Government Dashboard Documentation](GOVERNMENT_DASHBOARD_REDESIGN_COMPLETE.md)
+- [SMS System Documentation](SMS_SYSTEM_COMPLETE.md)
 - [Privacy Policy](PRIVACY_POLICY.md)
 - [Terms of Service](TERMS_OF_SERVICE.md)
+- [API Documentation](API_DOCS.md) *(coming soon)*
 
 ---
 
-**Ready to make a difference? Let's build better communities together! 🚀**
+**Made with ❤️ for citizens and governments**
+
+**Ready to transform civic engagement? Let's build smarter communities together! 🚀**
+
+---
+
+*© 2024 JanMitra - All Rights Reserved*
