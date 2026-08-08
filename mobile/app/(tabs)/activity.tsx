@@ -20,6 +20,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { useLanguage } from '../../src/contexts/LanguageContext';
 import { problemService } from '../../src/services/problem.service';
 import { alertService } from '../../src/services/alert.service';
 import { Problem, Alert as AlertType } from '../../src/types';
@@ -33,6 +34,7 @@ type TabType = 'posted' | 'helping' | 'notifications';
 
 export default function ComplaintTrackingScreen() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<TabType>('posted');
   const [myProblems, setMyProblems] = useState<Problem[]>([]);
   const [notifications, setNotifications] = useState<AlertType[]>([]);
@@ -80,16 +82,27 @@ export default function ComplaintTrackingScreen() {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffMins < 1) return t('justNow', 'Just now');
+    if (diffMins < 60) return `${diffMins} ${t('mAgo', 'm ago')}`;
+    if (diffHours < 24) return `${diffHours} ${t('hAgo', 'h ago')}`;
     if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays}d ago`;
+    if (diffDays < 7) return `${diffDays} ${t('dAgo', 'd ago')}`;
     return date.toLocaleDateString();
   };
 
   const getCategoryInfo = (categoryId: string) => {
-    return PROBLEM_CATEGORIES.find((c) => c.id === categoryId) || PROBLEM_CATEGORIES[7];
+    const found = PROBLEM_CATEGORIES.find((c) => c.id === categoryId) || PROBLEM_CATEGORIES[7];
+    const categoryKeyMap: Record<string, string> = {
+      infrastructure: 'catInfrastructure',
+      sanitation: 'catSanitation',
+      utilities: 'catUtilities',
+      safety: 'catSafety',
+      access: 'catAccess',
+      environment: 'catEnvironment',
+      public_health: 'catPublicHealth',
+      other: 'catOther',
+    };
+    return { ...found, name: t(categoryKeyMap[found.id] || 'catOther', found.name) };
   };
 
   const getStatusStyle = (status: string) => {
@@ -104,7 +117,7 @@ export default function ComplaintTrackingScreen() {
   const tabs = [
     {
       id: 'posted' as TabType,
-      label: 'My Complaints',
+      label: t('myComplaints', 'My Complaints'),
       icon: 'document-text',
       activeIcon: 'document-text',
       count: myProblems.length,
@@ -113,7 +126,7 @@ export default function ComplaintTrackingScreen() {
     },
     {
       id: 'notifications' as TabType,
-      label: 'Updates',
+      label: t('tabAlerts', 'Notifications'),
       icon: 'notifications-outline',
       activeIcon: 'notifications',
       count: notifications.filter((n) => !n.read).length,
@@ -263,9 +276,9 @@ export default function ComplaintTrackingScreen() {
     const emptyStates = {
       posted: {
         icon: 'document-text-outline',
-        title: 'No Problems Posted',
-        subtitle: 'Report an issue in your area and get help from the community',
-        buttonText: 'Post a Problem',
+        title: t('noComplaintsYet', 'No Problems Posted'),
+        subtitle: t('reportProblemPrompt', 'Report an issue in your area and get help from the community'),
+        buttonText: t('postTitle', 'Post a Problem'),
         buttonIcon: 'add-circle',
         onPress: () => router.push('/(tabs)/post'),
         gradient: ['#F0FDF4', '#DCFCE7'],
@@ -273,8 +286,8 @@ export default function ComplaintTrackingScreen() {
       },
       notifications: {
         icon: 'notifications',
-        title: 'No updates yet',
-        subtitle: 'You\'ll be notified when your complaints are updated',
+        title: t('noNotifications', 'No updates yet'),
+        subtitle: t('trackYourComplaints', 'You\'ll be notified when your complaints are updated'),
         buttonText: null,
         buttonIcon: null,
         onPress: null,
@@ -320,8 +333,8 @@ export default function ComplaintTrackingScreen() {
               <Ionicons name="shield-checkmark" size={24} color="#0F172A" />
             </View>
             <View>
-              <Text style={styles.headerTitle}>Complaint Tracking</Text>
-              <Text style={styles.headerSubtitle}>Monitor your submissions</Text>
+              <Text style={styles.headerTitle}>{t('myComplaints', 'Complaint Tracking')}</Text>
+              <Text style={styles.headerSubtitle}>{t('trackYourComplaints', 'Monitor your submissions')}</Text>
             </View>
           </View>
           <TouchableOpacity 
@@ -336,7 +349,7 @@ export default function ComplaintTrackingScreen() {
         <View style={styles.statsRow}>
           <View style={[styles.statCard, { backgroundColor: '#F8FAFC' }]}>
             <Text style={[styles.statNumber, { color: '#0F172A' }]}>{myProblems.length}</Text>
-            <Text style={[styles.statLabel, { color: '#334155' }]}>Submitted</Text>
+            <Text style={[styles.statLabel, { color: '#334155' }]}>{t('submitted', 'Submitted')}</Text>
           </View>
         </View>
 

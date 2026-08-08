@@ -15,6 +15,7 @@ const govtechRoutes = require('./routes/govtech.routes');
 const aiRoutes = require('./routes/ai.routes');
 const costAnalysisRoutes = require('./routes/cost-analysis.routes');
 const officerRoutes = require('./routes/officer.routes');
+const smsRoutes = require('./routes/sms');
 
 // Import middleware
 const { errorHandler, notFoundHandler } = require('./middleware/error.middleware');
@@ -64,6 +65,7 @@ app.use(`${apiBase}/govtech`, govtechRoutes);
 app.use(`${apiBase}/ai`, aiRoutes);
 app.use(`${apiBase}/cost-analysis`, costAnalysisRoutes);
 app.use(`${apiBase}/officer`, officerRoutes);
+app.use(`${apiBase}/sms`, smsRoutes);
 
 // Add simple endpoints for real data
 app.get(`${apiBase}/users`, async (req, res) => {

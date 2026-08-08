@@ -24,6 +24,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { useLanguage, Language } from '../../src/contexts/LanguageContext';
 import { problemService } from '../../src/services/problem.service';
 import { alertService } from '../../src/services/alert.service';
 import { voteService } from '../../src/services/vote.service';
@@ -35,6 +36,7 @@ import { VoteButton } from '../../src/components/VoteButton';
 
 export default function FeedScreen() {
   const { user } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
   const [problems, setProblems] = useState<Problem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -51,19 +53,20 @@ export default function FeedScreen() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [locationName, setLocationName] = useState('Your Location');
+  const [locationName, setLocationName] = useState(t('yourLocation', 'Your Location'));
   const [trendingProblems, setTrendingProblems] = useState<Problem[]>([]);
   const [showTrending, setShowTrending] = useState(true);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
 
   const PAGE_SIZE = 20; // Load 20 items at a time for better performance
 
   const statusOptions = [
-    { id: 'all', label: 'All Status', icon: 'apps', color: '#6B7280' },
-    { id: 'posted', label: 'Submitted', icon: 'time', color: '#F59E0B' },
-    { id: 'being_helped', label: 'In Review', icon: 'eye', color: '#3B82F6' },
-    { id: 'in_progress', label: 'In Progress', icon: 'construct', color: '#8B5CF6' },
-    { id: 'solved', label: 'Resolved', icon: 'checkmark-circle', color: '#10B981' },
-    { id: 'escalated', label: 'Escalated', icon: 'arrow-up-circle', color: '#DC2626' },
+    { id: 'all', label: t('allStatus', 'All Status'), icon: 'apps', color: '#6B7280' },
+    { id: 'posted', label: t('submitted', 'Submitted'), icon: 'time', color: '#F59E0B' },
+    { id: 'being_helped', label: t('inReview', 'In Review'), icon: 'eye', color: '#3B82F6' },
+    { id: 'in_progress', label: t('inProgress', 'In Progress'), icon: 'construct', color: '#8B5CF6' },
+    { id: 'solved', label: t('resolved', 'Resolved'), icon: 'checkmark-circle', color: '#10B981' },
+    { id: 'escalated', label: t('escalated', 'Escalated'), icon: 'arrow-up-circle', color: '#DC2626' },
   ];
 
   const getUserLocation = async () => {
@@ -236,10 +239,10 @@ export default function FeedScreen() {
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
+    if (diffMins < 1) return t('justNow', 'Just now');
+    if (diffMins < 60) return `${diffMins} ${t('mAgo', 'm ago')}`;
+    if (diffHours < 24) return `${diffHours} ${t('hAgo', 'h ago')}`;
+    if (diffDays < 7) return `${diffDays} ${t('dAgo', 'd ago')}`;
     return date.toLocaleDateString();
   };
 
@@ -250,16 +253,28 @@ export default function FeedScreen() {
   };
 
   const getCategoryInfo = (categoryId: string) => {
-    return PROBLEM_CATEGORIES.find((c) => c.id === categoryId) || PROBLEM_CATEGORIES[7];
+    const found = PROBLEM_CATEGORIES.find((c) => c.id === categoryId) || PROBLEM_CATEGORIES[7];
+    const categoryKeyMap: Record<string, string> = {
+      infrastructure: 'catInfrastructure',
+      sanitation: 'catSanitation',
+      utilities: 'catUtilities',
+      safety: 'catSafety',
+      access: 'catAccess',
+      environment: 'catEnvironment',
+      public_health: 'catPublicHealth',
+      other: 'catOther',
+    };
+    const translatedName = t(categoryKeyMap[found.id] || 'catOther', found.name);
+    return { ...found, name: translatedName };
   };
 
   const getStatusStyle = (status: string) => {
     switch (status) {
-      case 'posted': return { bg: '#FEF3C7', text: '#B45309', label: 'Submitted', icon: 'time' };
-      case 'being_helped': return { bg: '#DBEAFE', text: '#1D4ED8', label: 'In Review', icon: 'eye' };
-      case 'in_progress': return { bg: '#EDE9FE', text: '#7C3AED', label: 'In Progress', icon: 'construct' };
-      case 'solved': return { bg: '#D1FAE5', text: '#047857', label: 'Resolved', icon: 'checkmark-circle' };
-      case 'escalated': return { bg: '#FEE2E2', text: '#DC2626', label: 'Escalated', icon: 'arrow-up-circle' };
+      case 'posted': return { bg: '#FEF3C7', text: '#B45309', label: t('submitted', 'Submitted'), icon: 'time' };
+      case 'being_helped': return { bg: '#DBEAFE', text: '#1D4ED8', label: t('inReview', 'In Review'), icon: 'eye' };
+      case 'in_progress': return { bg: '#EDE9FE', text: '#7C3AED', label: t('inProgress', 'In Progress'), icon: 'construct' };
+      case 'solved': return { bg: '#D1FAE5', text: '#047857', label: t('resolved', 'Resolved'), icon: 'checkmark-circle' };
+      case 'escalated': return { bg: '#FEE2E2', text: '#DC2626', label: t('escalated', 'Escalated'), icon: 'arrow-up-circle' };
       default: return { bg: '#F3F4F6', text: '#6B7280', label: 'Unknown', icon: 'help' };
     }
   };
@@ -288,12 +303,16 @@ export default function FeedScreen() {
         />
         <View style={styles.headerTop}>
           <View style={styles.locationSection}>
-            <View style={styles.govIcon}>
-              <Ionicons name="shield-checkmark" size={16} color="#0F172A" />
+            <View style={[styles.govIcon, { backgroundColor: 'transparent' }]}>
+              <Image 
+                source={{ uri: 'https://i.ibb.co/gZCY7kfh/Whats-App-Image-2026-08-07-at-20-45-40-1.jpg' }} 
+                style={{ width: 36, height: 36, borderRadius: 12 }} 
+                resizeMode="cover" 
+              />
             </View>
             <View>
-              <Text style={styles.locationLabel}>🏛️ Redressal Planner</Text>
-              <Text style={styles.locationText} numberOfLines={1}>Civic Issue Tracking System</Text>
+              <Text style={styles.locationLabel}>🏛️ {t('appName', 'JanMitra')}</Text>
+              <Text style={styles.locationText} numberOfLines={1}>{t('portalSub', 'Civic Redressal Portal')}</Text>
             </View>
           </View>
           <TouchableOpacity style={styles.notifButton} onPress={openNotifications}>
@@ -306,9 +325,9 @@ export default function FeedScreen() {
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.demoButton} 
-            onPress={() => router.push('/govtech-demo')}
+            onPress={() => setShowLanguageModal(true)}
           >
-            <Ionicons name="play-circle" size={22} color="#FFFFFF" />
+            <Ionicons name="language-outline" size={22} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
 
@@ -320,14 +339,14 @@ export default function FeedScreen() {
               onPress={() => setSortBy('newest')}
             >
               <Ionicons name="time-outline" size={16} color={sortBy === 'newest' ? '#0F172A' : '#FFFFFF'} />
-              <Text style={[styles.sortText, sortBy === 'newest' && styles.sortTextActive]}>Latest Issues</Text>
+              <Text style={[styles.sortText, sortBy === 'newest' && styles.sortTextActive]}>{t('latestIssues', 'Latest Issues')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.sortBtn, sortBy === 'nearest' && styles.sortBtnActive]}
               onPress={() => setSortBy('nearest')}
             >
               <Ionicons name="navigate-outline" size={16} color={sortBy === 'nearest' ? '#0F172A' : '#FFFFFF'} />
-              <Text style={[styles.sortText, sortBy === 'nearest' && styles.sortTextActive]}>Nearby</Text>
+              <Text style={[styles.sortText, sortBy === 'nearest' && styles.sortTextActive]}>{t('nearby', 'Nearby')}</Text>
             </TouchableOpacity>
           </View>
           <TouchableOpacity style={styles.filterBtn} onPress={() => setShowFilterModal(true)}>
@@ -371,7 +390,7 @@ export default function FeedScreen() {
       {/* Results Count */}
       <View style={styles.resultsBar}>
         <Text style={styles.resultsText}>
-          {problems.length} {problems.length === 1 ? 'issue' : 'issues'} reported
+          {problems.length} {t('issuesReported', 'issues reported')}
         </Text>
       </View>
 
@@ -381,7 +400,7 @@ export default function FeedScreen() {
           <View style={styles.trendingSectionHeader}>
             <View style={styles.trendingTitle}>
               <Ionicons name="flame" size={20} color="#EF4444" />
-              <Text style={styles.trendingTitleText}>Trending Now</Text>
+              <Text style={styles.trendingTitleText}>{t('trendingNow', 'Trending Now')}</Text>
             </View>
             <TouchableOpacity onPress={() => setShowTrending(false)}>
               <Ionicons name="close" size={20} color="#9CA3AF" />
@@ -462,17 +481,17 @@ export default function FeedScreen() {
               <View style={styles.emptyIcon}>
                 <Ionicons name="checkmark-circle" size={64} color="#16A34A" />
               </View>
-              <Text style={styles.emptyTitle}>All Clear! 🎉</Text>
+              <Text style={styles.emptyTitle}>{t('allClear', 'All Clear! 🎉')}</Text>
               <Text style={styles.emptyText}>
-                {activeFiltersCount > 0 ? 'No issues match your filters' : 'No civic issues reported in your area'}
+                {activeFiltersCount > 0 ? t('noIssuesFilter', 'No issues match your filters') : t('noIssuesArea', 'No civic issues reported in your area')}
               </Text>
               {activeFiltersCount > 0 ? (
                 <TouchableOpacity style={styles.emptyButton} onPress={clearFilters}>
-                  <Text style={styles.emptyButtonText}>Clear Filters</Text>
+                  <Text style={styles.emptyButtonText}>{t('clearAll', 'Clear Filters')}</Text>
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity style={styles.emptyButton} onPress={() => router.push('/(tabs)/post')}>
-                  <Text style={styles.emptyButtonText}>Report a Civic Issue</Text>
+                  <Text style={styles.emptyButtonText}>{t('postTitle', 'Report a Civic Issue')}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -522,7 +541,7 @@ export default function FeedScreen() {
                         </View>
                         <View style={{ backgroundColor: category.isGovOnly ? '#FEE2E2' : '#D1FAE5', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: category.isGovOnly ? '#FECACA' : '#A7F3D0' }}>
                           <Text style={{ fontSize: 9, fontWeight: '700', color: category.isGovOnly ? '#DC2626' : '#047857' }}>
-                            {category.isGovOnly ? '🏛️ GOV ONLY' : '🤝 COMMUNITY'}
+                            {category.isGovOnly ? t('govOnly', '🏛️ GOV ONLY') : t('community', '🤝 COMMUNITY')}
                           </Text>
                         </View>
                       </View>
@@ -540,32 +559,22 @@ export default function FeedScreen() {
                         <Ionicons name="business" size={14} color="#059669" />
                       </View>
                       <View style={styles.costTextContainer}>
-                        {problem.department ? (
-                          <>
-                            <Text style={styles.costLabel}>Routing Dept:</Text>
-                            <Text style={styles.costAmount}>{problem.department.name}</Text>
-                          </>
-                        ) : (
-                          <>
-                            <Text style={styles.costLabel}>Routing Dept:</Text>
-                            <Text style={styles.costAmount}>
-                              {(() => {
-                                // Department mapping based on category
-                                const deptMap: Record<string, string> = {
-                                  infrastructure: 'Public Works',
-                                  sanitation: 'Sanitation Dept',
-                                  utilities: 'Utility Services',
-                                  safety: 'Safety Authority',
-                                  access: 'Disability Affairs',
-                                  environment: 'Environment Dept',
-                                  public_health: 'Health Dept',
-                                  other: 'Civic Center'
-                                };
-                                return deptMap[problem.category] || 'Civic Center';
-                              })()}
-                            </Text>
-                          </>
-                        )}
+                        <Text style={styles.costLabel}>{t('routingDept', 'Routing Dept:')}</Text>
+                        <Text style={styles.costAmount}>
+                          {(() => {
+                            const deptMap: Record<string, string> = {
+                              infrastructure: t('deptPublicWorks', 'Public Works'),
+                              sanitation: t('deptSanitation', 'Sanitation Dept'),
+                              utilities: t('deptUtilities', 'Utility Services'),
+                              safety: t('deptSafety', 'Safety Authority'),
+                              access: t('deptAccess', 'Disability Affairs'),
+                              environment: t('deptEnvironment', 'Environment Dept'),
+                              public_health: t('deptHealth', 'Health Dept'),
+                              other: t('deptCivicCenter', 'Civic Center')
+                            };
+                            return problem.department?.name || deptMap[problem.category] || t('deptCivicCenter', 'Civic Center');
+                          })()}
+                        </Text>
                       </View>
                       <View style={styles.costBadge}>
                         <Text style={styles.costBadgeText}>🏛️</Text>
@@ -775,6 +784,55 @@ export default function FeedScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      {/* Language Modal */}
+      <Modal
+        visible={showLanguageModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowLanguageModal(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setShowLanguageModal(false)}>
+          <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{t('selectLanguage', 'Select Language')}</Text>
+              <TouchableOpacity style={styles.modalClose} onPress={() => setShowLanguageModal(false)}>
+                <Ionicons name="close" size={24} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 300 }}>
+              <View style={styles.filterOptions}>
+                {[
+                  { code: 'en', label: 'English' },
+                  { code: 'hi', label: 'Hindi (हिन्दी)' },
+                  { code: 'mr', label: 'Marathi (मराठी)' },
+                ].map((item) => (
+                  <TouchableOpacity
+                    key={item.code}
+                    style={[
+                      styles.filterOption,
+                      language === item.code && styles.filterOptionActive,
+                      { width: '100%', justifyContent: 'space-between' }
+                    ]}
+                    onPress={() => {
+                      setLanguage(item.code as Language);
+                      setShowLanguageModal(false);
+                    }}
+                  >
+                    <Text style={[styles.filterOptionText, language === item.code && styles.filterOptionTextActive]}>
+                      {item.label}
+                    </Text>
+                    {language === item.code && (
+                      <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -955,21 +1013,21 @@ const styles = StyleSheet.create({
   noMoreItems: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 20, gap: 10 },
   noMoreText: { fontSize: 14, color: '#10B981', fontWeight: '600' },
   // Trending Section
-  trendingSection: { backgroundColor: '#FFFFFF', paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
-  trendingSectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginBottom: 12 },
-  trendingTitle: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  trendingTitleText: { fontSize: 16, fontWeight: '700', color: '#1F2937' },
+  trendingSection: { paddingVertical: 10 },
+  trendingSectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginBottom: 8 },
+  trendingTitle: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  trendingTitleText: { fontSize: 14, fontWeight: '700', color: '#1F2937' },
   trendingScroll: { paddingLeft: 16 },
-  trendingCard: { width: 160, marginRight: 12, backgroundColor: '#FFFFFF', borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: '#F3F4F6', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
-  trendingBadge: { position: 'absolute', top: 8, right: 8, backgroundColor: '#EF4444', width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center', zIndex: 1 },
-  trendingImage: { width: '100%', height: 100 },
-  trendingImagePlaceholder: { width: '100%', height: 100, alignItems: 'center', justifyContent: 'center' },
-  trendingEmoji: { fontSize: 32 },
-  trendingContent: { padding: 10 },
-  trendingCardTitle: { fontSize: 13, fontWeight: '600', color: '#1F2937', lineHeight: 18, marginBottom: 8 },
-  trendingStats: { flexDirection: 'row', gap: 12 },
-  trendingStat: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  trendingStatText: { fontSize: 11, fontWeight: '600', color: '#6B7280' },
+  trendingCard: { width: 130, marginRight: 10, backgroundColor: '#FFFFFF', borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: '#F1F5F9' },
+  trendingBadge: { position: 'absolute', top: 6, right: 6, backgroundColor: '#EF4444', width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', zIndex: 1 },
+  trendingImage: { width: '100%', height: 75 },
+  trendingImagePlaceholder: { width: '100%', height: 75, alignItems: 'center', justifyContent: 'center' },
+  trendingEmoji: { fontSize: 24 },
+  trendingContent: { padding: 8 },
+  trendingCardTitle: { fontSize: 12, fontWeight: '600', color: '#1F2937', lineHeight: 16, marginBottom: 4 },
+  trendingStats: { flexDirection: 'row', gap: 8 },
+  trendingStat: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  trendingStatText: { fontSize: 10, fontWeight: '600', color: '#6B7280' },
   // Vote Section
   voteSection: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   viewCount: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, backgroundColor: '#F9FAFB', borderRadius: 12 },

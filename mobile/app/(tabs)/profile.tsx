@@ -19,9 +19,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { useLanguage } from '../../src/contexts/LanguageContext';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({
     complaints_filed: 0,
@@ -60,7 +62,7 @@ export default function ProfileScreen() {
     {
       id: 'officer',
       icon: 'shield-checkmark',
-      label: 'Officer Portal',
+      label: t('officerPortal', 'Officer Portal'),
       color: '#0F172A',
       onPress: () => router.push('/officer-login'),
       show: true, // Always show for demo
@@ -68,7 +70,7 @@ export default function ProfileScreen() {
     {
       id: 'edit',
       icon: 'person-outline',
-      label: 'Edit Profile',
+      label: t('editProfile', 'Edit Profile'),
       color: '#3B82F6',
       onPress: () => router.push('/edit-profile'),
       show: true,
@@ -76,7 +78,7 @@ export default function ProfileScreen() {
     {
       id: 'notifications',
       icon: 'notifications-outline',
-      label: 'Notifications',
+      label: t('notifications', 'Notifications'),
       color: '#8B5CF6',
       onPress: () => Alert.alert('Coming Soon', 'Notification settings will be available soon'),
       show: true,
@@ -84,7 +86,7 @@ export default function ProfileScreen() {
     {
       id: 'privacy',
       icon: 'shield-checkmark-outline',
-      label: 'Privacy & Security',
+      label: t('privacySecurity', 'Privacy & Security'),
       color: '#10B981',
       onPress: () => Alert.alert('Coming Soon', 'Privacy settings will be available soon'),
       show: true,
@@ -92,7 +94,7 @@ export default function ProfileScreen() {
     {
       id: 'help',
       icon: 'help-circle-outline',
-      label: 'Help & Support',
+      label: t('helpSupport', 'Help & Support'),
       color: '#64748B',
       onPress: () => Alert.alert('Help', 'Contact us at support@janmitra.app'),
       show: true,
@@ -100,7 +102,7 @@ export default function ProfileScreen() {
     {
       id: 'about',
       icon: 'information-circle-outline',
-      label: 'About JanMitra',
+      label: t('aboutJanMitra', 'About JanMitra'),
       color: '#64748B',
       onPress: () => Alert.alert('JanMitra', 'Version 1.0.0\nCommunity Redressal Planner'),
       show: true,
@@ -122,7 +124,7 @@ export default function ProfileScreen() {
       {/* Header with Gradient */}
       <LinearGradient colors={['#16A34A', '#15803D']} style={styles.header}>
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Profile</Text>
+          <Text style={styles.headerTitle}>{t('profileTitle', 'Profile')}</Text>
         </View>
 
         {/* Profile Card */}
@@ -143,11 +145,11 @@ export default function ProfileScreen() {
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{stats.complaints_filed}</Text>
-              <Text style={styles.statLabel}>Posted</Text>
+              <Text style={styles.statLabel}>{t('postedStats', 'Posted')}</Text>
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{stats.resolved}</Text>
-              <Text style={styles.statLabel}>Resolved</Text>
+              <Text style={styles.statLabel}>{t('resolvedStats', 'Resolved')}</Text>
             </View>
           </View>
         </View>
@@ -175,7 +177,7 @@ export default function ProfileScreen() {
         {/* Sign Out Button */}
         <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
           <Ionicons name="log-out-outline" size={22} color="#EF4444" />
-          <Text style={styles.signOutText}>Sign Out</Text>
+          <Text style={styles.signOutText}>{t('signOut', 'Sign Out')}</Text>
         </TouchableOpacity>
 
         <View style={{ height: 100 }} />

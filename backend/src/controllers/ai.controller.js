@@ -8,31 +8,31 @@ const axios = require('axios');
 class AIController {
   // Chat with Groq AI
   async chatWithAI(req, res) {
+    const { message = '', context = 'govtech' } = req.body || {};
+
+    if (!message) {
+      return res.status(400).json({
+        error: 'Message is required'
+      });
+    }
+
     try {
-      const { message, context = 'govtech' } = req.body;
-
-      if (!message) {
-        return res.status(400).json({
-          error: 'Message is required'
-        });
-      }
-
-      // Use real Groq API
+      // Use real Groq API if key present, else fallback
       const response = await this.callGroqAPI(message);
 
-      res.json({
+      return res.json({
         success: true,
         response,
         timestamp: new Date().toISOString()
       });
 
     } catch (error) {
-      console.error('AI chat error:', error);
+      console.error('AI chat error:', error.message || error);
       
       // Fallback to mock response if API fails
       const fallbackResponse = await this.getMockGroqResponse(message);
       
-      res.json({
+      return res.json({
         success: true,
         response: fallbackResponse,
         timestamp: new Date().toISOString(),

@@ -21,8 +21,10 @@ import * as Location from 'expo-location';
 import { problemService } from '../../src/services/problem.service';
 import { Problem } from '../../src/types';
 import { PROBLEM_CATEGORIES, STATUS_CONFIG } from '../../src/constants/categories';
+import { useLanguage } from '../../src/contexts/LanguageContext';
 
 export default function MapScreen() {
+  const { t } = useLanguage();
   const [problems, setProblems] = useState<Problem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -132,7 +134,7 @@ export default function MapScreen() {
         >
           <ActivityIndicator size="large" color="#16A34A" />
         </View>
-        <Text className="text-gray-600 font-medium">Finding problems near you...</Text>
+        <Text className="text-gray-600 font-medium">{t('findingProblems', 'Finding problems near you...')}</Text>
       </SafeAreaView>
     );
   }
@@ -159,9 +161,9 @@ export default function MapScreen() {
               <Ionicons name="location" size={24} color="#2563EB" />
             </View>
             <View>
-              <Text className="text-2xl font-bold text-gray-900">Nearby</Text>
+              <Text className="text-2xl font-bold text-gray-900">{t('mapTitle', 'Nearby')}</Text>
               <Text className="text-gray-500 text-sm">
-                {problems.length} problems {userLocation ? 'near you' : 'found'}
+                {problems.length} {t('issuesReported', 'problems found')}
               </Text>
             </View>
           </View>

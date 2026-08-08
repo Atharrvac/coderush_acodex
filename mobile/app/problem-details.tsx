@@ -27,6 +27,7 @@ import { chatService } from '../src/services/chat.service';
 import { Problem } from '../src/types';
 import { PROBLEM_CATEGORIES, STATUS_CONFIG } from '../src/constants/categories';
 import { ProblemDetailsSkeleton } from '../src/components/ui';
+import { supabase } from '../src/config/supabase';
 
 const { width } = Dimensions.get('window');
 
@@ -44,6 +45,24 @@ export default function ProblemDetailsScreen() {
 
   useEffect(() => {
     fetchProblem();
+    
+    // Listen for realtime updates from Government Dashboard
+    const subscription = supabase
+      .channel(`problem-${id}`)
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'problems',
+        filter: `id=eq.${id}`
+      }, (payload) => {
+        console.log('Real-time problem update received:', payload);
+        fetchProblem(); // Refresh to get the latest status and notes
+      })
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(subscription);
+    };
   }, [id]);
 
   const fetchProblem = async () => {
@@ -428,6 +447,28 @@ export default function ProblemDetailsScreen() {
             <Text className="font-bold text-gray-800 mb-2">Description</Text>
             <Text className="text-gray-600 text-base leading-6">{problem.description}</Text>
           </View>
+
+          {/* Government Resolution Banner */}
+          {problem.status === 'solved' && problem.resolution_notes && (
+            <View
+              className="bg-emerald-50 rounded-2xl p-4 mb-4"
+              style={{ borderWidth: 1, borderColor: '#34D399' }}
+            >
+              <View className="flex-row items-center mb-2">
+                <Ionicons name="checkmark-done-circle" size={24} color="#059669" />
+                <Text className="font-black text-emerald-800 ml-2 text-base">SOLVED BY GOVERNMENT</Text>
+              </View>
+              <Text className="text-emerald-900 text-sm font-semibold mb-1">Official Resolution Report:</Text>
+              <Text className="text-emerald-800 text-sm leading-5">
+                {problem.resolution_notes}
+              </Text>
+              {problem.resolved_at && (
+                <Text className="text-emerald-600 text-xs mt-3 italic">
+                  Resolved on {new Date(problem.resolved_at).toLocaleDateString()}
+                </Text>
+              )}
+            </View>
+          )}
 
           {/* Privacy Layer Disclaimer */}
           <View

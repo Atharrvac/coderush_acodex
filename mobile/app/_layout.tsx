@@ -9,6 +9,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '../src/contexts/AuthContext';
+import { LanguageProvider } from '../src/contexts/LanguageContext';
 import { networkMonitor } from '../src/utils/networkMonitor';
 import { offlineQueue } from '../src/utils/offlineQueue';
 import WebCompatibility from '../src/components/WebCompatibility';
@@ -46,20 +47,22 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <WebCompatibility />
-        <StatusBar style="auto" />
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="login" />
-          <Stack.Screen name="register" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="problem-details" />
-          <Stack.Screen name="edit-profile" />
-          <Stack.Screen name="chat" />
-          <Stack.Screen name="active-sessions" />
-        </Stack>
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <WebCompatibility />
+          <StatusBar style="auto" />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="login" />
+            <Stack.Screen name="register" />
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="problem-details" />
+            <Stack.Screen name="edit-profile" />
+            <Stack.Screen name="chat" />
+            <Stack.Screen name="active-sessions" />
+          </Stack>
+        </AuthProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }

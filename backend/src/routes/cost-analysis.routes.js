@@ -7,6 +7,6 @@ const router = express.Router();
 const costAnalysisController = require('../controllers/cost-analysis.controller');
 
 // Analyze photo and estimate repair cost
-router.post('/analyze', costAnalysisController.analyzePhotoAndEstimateCost);
+router.post('/analyze', (req, res) => costAnalysisController.analyzePhotoAndEstimateCost(req, res));
 
 module.exports = router;

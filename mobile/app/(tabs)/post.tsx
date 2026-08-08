@@ -24,6 +24,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { useLanguage } from '../../src/contexts/LanguageContext';
 import { problemService } from '../../src/services/problem.service';
 import { LanguageSelector } from '../../src/components/LanguageSelector';
 import { translationService, Language } from '../../src/services/translation.service';
@@ -50,11 +51,12 @@ interface LocationSuggestion {
 
 export default function PostProblemScreen() {
   const { user } = useAuth();
+  const { language: globalLanguage } = useLanguage();
   const [images, setImages] = useState<string[]>([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedLanguage, setSelectedLanguage] = useState<Language>('en');
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>(globalLanguage as Language || 'en');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [locationText, setLocationText] = useState('');
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
@@ -64,6 +66,13 @@ export default function PostProblemScreen() {
   const [searchingLocation, setSearchingLocation] = useState(false);
   const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Sync with global language
+  useEffect(() => {
+    if (globalLanguage) {
+      setSelectedLanguage(globalLanguage as Language);
+    }
+  }, [globalLanguage]);
 
   // Animation
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;

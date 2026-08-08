@@ -8,6 +8,7 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Platform, View, StyleSheet } from 'react-native';
 import { VoiceBotFAB } from '../../src/components/VoiceBotFAB';
+import { useLanguage } from '../../src/contexts/LanguageContext';
 
 // Custom Post Button Component (elevated)
 function PostTabIcon({ focused }: { focused: boolean }) {
@@ -25,6 +26,8 @@ function PostTabIcon({ focused }: { focused: boolean }) {
 }
 
 export default function TabLayout() {
+  const { t } = useLanguage();
+
   return (
     <View style={{ flex: 1 }}>
       <Tabs
@@ -58,7 +61,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Feed',
+          title: t('tabFeed', 'Feed'),
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons 
               name={focused ? 'home' : 'home-outline'} 
@@ -71,7 +74,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="activity"
         options={{
-          title: 'Tracking',
+          title: t('tabActivity', 'Activity'),
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons 
               name={focused ? 'analytics' : 'analytics-outline'} 
@@ -94,7 +97,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="map"
         options={{
-          title: 'Map',
+          title: t('tabMap', 'Map'),
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons 
               name={focused ? 'map' : 'map-outline'} 
@@ -107,7 +110,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: t('tabProfile', 'Profile'),
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons 
               name={focused ? 'person' : 'person-outline'} 
